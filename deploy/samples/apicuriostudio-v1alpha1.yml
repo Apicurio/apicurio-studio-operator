@@ -1,0 +1,6 @@
+apiVersion: studio.apicur.io/v1alpha1
+kind: ApicurioStudio
+metadata:
+  name: apicurio-sample
+spec:
+  name: apicurio-sample
