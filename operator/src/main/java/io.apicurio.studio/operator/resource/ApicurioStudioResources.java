@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,14 +16,18 @@
 package io.apicurio.studio.operator.resource;
 
 import io.apicurio.studio.operator.api.ApicurioStudioSpec;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.EnvVar;
+import io.apicurio.studio.operator.api.ApicurioStudioStatus;
 import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.RouteBuilder;
+
+import java.util.Map;
 
 /**
  * @author laurent.broudoux@gmail.com
@@ -46,9 +50,10 @@ public class ApicurioStudioResources {
    /**
     * Prepare a new Deployment for the API module.
     * @param spec The specification from custom resource
+    * @param status The current status of custom resource
     * @return The full deployment.
     */
-   public static Deployment prepareAPIDeployment(ApicurioStudioSpec spec) {
+   public static Deployment prepareAPIDeployment(ApicurioStudioSpec spec, ApicurioStudioStatus status) {
       // Building a fresh new Deployment according the spec.
       DeploymentBuilder builder = new DeploymentBuilder()
             .withNewMetadata()
@@ -71,15 +76,12 @@ public class ApicurioStudioResources {
                      .addNewContainer()
                         .withName("api")
                         .withImage("apicurio/apicurio-studio-api:latest")
-                        .addToPorts(
-                              new ContainerPortBuilder().withNewContainerPort(8080).withProtocol("TCP").build()
-                        )
-                        .addToEnv(
-                              new EnvVar("APICURIO_KC_REALM", spec.getKeycloak().getRealm(), null),
-                              new EnvVar("APICURIO_DB_TYPE", spec.getDatabase().getType(), null),
-                              new EnvVar("APICURIO_DB_DRIVER_NAME", spec.getDatabase().getDriver(), null),
-                              new EnvVar("APICURIO_DB_CONNECTION_URL", spec.getDatabase().getUrl(), null)
-                        )
+                        .addNewPort().withContainerPort(8080).withProtocol("TCP").endPort()
+                        .addNewEnv().withName("APICURIO_KC_AUTH_URL").withValue("https://" + status.getKeycloakUrl() + "/auth").endEnv()
+                        .addNewEnv().withName("APICURIO_KC_REALM").withValue(spec.getKeycloak().getRealm()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_TYPE").withValue(spec.getDatabase().getType()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_DRIVER_NAME").withValue(spec.getDatabase().getDriver()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_CONNECTION_URL").withValue(spec.getDatabase().getUrl()).endEnv()
                         .addNewEnv()
                            .withName("APICURIO_DB_USER_NAME")
                            .withNewValueFrom()
@@ -92,6 +94,12 @@ public class ApicurioStudioResources {
                               .withNewSecretKeyRef().withName(DatabaseResources.getDatabaseSecretName(spec)).withKey("database-password").endSecretKeyRef()
                            .endValueFrom()
                         .endEnv()
+                        .withNewResources()
+                           .addToRequests(Map.of("cpu", new Quantity("100m")))
+                           .addToRequests(Map.of("memory", new Quantity("800Mi")))
+                           .addToLimits(Map.of("cpu", new Quantity("1")))
+                           .addToLimits(Map.of("memory", new Quantity("1700Mi")))
+                        .endResources()
                         .withNewLivenessProbe()
                            .withHttpGet(new HTTPGetActionBuilder().withPath("/system/ready").withPort(new IntOrString(8080)).withScheme("HTTP").build())
                            .withInitialDelaySeconds(30)
@@ -147,6 +155,36 @@ public class ApicurioStudioResources {
    }
 
    /**
+    *
+    * @param spec
+    * @return
+    */
+   public static Route prepareAPIRoute(ApicurioStudioSpec spec) {
+      // Building a fresh new Route according the spec.
+      RouteBuilder builder = new RouteBuilder()
+            .withNewMetadata()
+               .withName(getAPIDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_API_MODULE)
+            .endMetadata()
+            .withNewSpec()
+               .withNewTo()
+                  .withKind("Service")
+                  .withName(getAPIDeploymentName(spec))
+               .endTo()
+               .withNewPort()
+                  .withNewTargetPort(8080)
+               .endPort()
+               .withNewTls()
+                  .withTermination("edge")
+                  .withInsecureEdgeTerminationPolicy("Redirect")
+               .endTls()
+            .endSpec();
+
+      return builder.build();
+   }
+
+   /**
     * Get the name of Deployment to create for the WS module.
     * @param spec The specification from custom resource
     * @return The deployment name.
@@ -183,14 +221,10 @@ public class ApicurioStudioResources {
                      .addNewContainer()
                         .withName("ws")
                         .withImage("apicurio/apicurio-studio-ws:latest")
-                        .addToPorts(
-                              new ContainerPortBuilder().withNewContainerPort(8080).withProtocol("TCP").build()
-                        )
-                        .addToEnv(
-                              new EnvVar("APICURIO_DB_TYPE", spec.getDatabase().getType(), null),
-                              new EnvVar("APICURIO_DB_DRIVER_NAME", spec.getDatabase().getDriver(), null),
-                              new EnvVar("APICURIO_DB_CONNECTION_URL", spec.getDatabase().getUrl(), null)
-                        )
+                        .addNewPort().withContainerPort(8080).withProtocol("TCP").endPort()
+                        .addNewEnv().withName("APICURIO_DB_TYPE").withValue(spec.getDatabase().getType()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_DRIVER_NAME").withValue(spec.getDatabase().getDriver()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_CONNECTION_URL").withValue(spec.getDatabase().getUrl()).endEnv()
                         .addNewEnv()
                            .withName("APICURIO_DB_USER_NAME")
                            .withNewValueFrom()
@@ -203,6 +237,12 @@ public class ApicurioStudioResources {
                               .withNewSecretKeyRef().withName(DatabaseResources.getDatabaseSecretName(spec)).withKey("database-password").endSecretKeyRef()
                            .endValueFrom()
                         .endEnv()
+                        .withNewResources()
+                           .addToRequests(Map.of("cpu", new Quantity("100m")))
+                           .addToRequests(Map.of("memory", new Quantity("900Mi")))
+                           .addToLimits(Map.of("cpu", new Quantity("1")))
+                           .addToLimits(Map.of("memory", new Quantity("1800Mi")))
+                        .endResources()
                         .withNewLivenessProbe()
                            .withHttpGet(new HTTPGetActionBuilder().withPath("/metrics").withPort(new IntOrString(8080)).withScheme("HTTP").build())
                            .withInitialDelaySeconds(30)
@@ -258,6 +298,36 @@ public class ApicurioStudioResources {
    }
 
    /**
+    *
+    * @param spec
+    * @return
+    */
+   public static Route prepareWSRoute(ApicurioStudioSpec spec) {
+      // Building a fresh new Route according the spec.
+      RouteBuilder builder = new RouteBuilder()
+            .withNewMetadata()
+               .withName(getWSDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_WS_MODULE)
+            .endMetadata()
+            .withNewSpec()
+               .withNewTo()
+                  .withKind("Service")
+                  .withName(getWSDeploymentName(spec))
+               .endTo()
+               .withNewPort()
+                  .withNewTargetPort(8080)
+               .endPort()
+               .withNewTls()
+                  .withTermination("edge")
+                  .withInsecureEdgeTerminationPolicy("Redirect")
+               .endTls()
+            .endSpec();
+
+      return builder.build();
+   }
+
+   /**
     * Get the name of Deployment to create for the UI module.
     * @param spec The specification from custom resource
     * @return The deployment name.
@@ -269,9 +339,10 @@ public class ApicurioStudioResources {
    /**
     * Prepare a new Deployment for the UI module.
     * @param spec The specification from custom resource
+    * @param status The current status of custom resource
     * @return The full deployment.
     */
-   public static Deployment prepareUIDeployment(ApicurioStudioSpec spec) {
+   public static Deployment prepareUIDeployment(ApicurioStudioSpec spec, ApicurioStudioStatus status) {
       // Building a fresh new Deployment according the spec.
       DeploymentBuilder builder = new DeploymentBuilder()
             .withNewMetadata()
@@ -294,13 +365,18 @@ public class ApicurioStudioResources {
                      .addNewContainer()
                         .withName("ui")
                         .withImage("apicurio/apicurio-studio-ui:latest")
-                        .addToPorts(
-                              new ContainerPortBuilder().withNewContainerPort(8080).withProtocol("TCP").build()
-                        )
-                        .addToEnv(
-                              new EnvVar("APICURIO_KS_REALM", spec.getKeycloak().getRealm(), null),
-                              new EnvVar("APICURIO_UI_LOGOUT_REDIRECT", "/", null)
-                        )
+                        .addNewPort().withContainerPort(8080).withProtocol("TCP").endPort()
+                        .addNewEnv().withName("APICURIO_KC_AUTH_URL").withValue("https://" + status.getKeycloakUrl() + "/auth").endEnv()
+                        .addNewEnv().withName("APICURIO_KC_REALM").withValue(spec.getKeycloak().getRealm()).endEnv()
+                        .addNewEnv().withName("APICURIO_UI_HUB_API_URL").withValue("https://" + status.getStudioUrl()).endEnv()
+                        .addNewEnv().withName("APICURIO_UI_EDITING_URL").withValue("https://" + status.getStudioUrl()).endEnv()
+                        .addNewEnv().withName("APICURIO_UI_LOGOUT_REDIRECT").withValue("/").endEnv()
+                        .withNewResources()
+                           .addToRequests(Map.of("cpu", new Quantity("100m")))
+                           .addToRequests(Map.of("memory", new Quantity("600Mi")))
+                           .addToLimits(Map.of("cpu", new Quantity("1")))
+                           .addToLimits(Map.of("memory", new Quantity("1300Mi")))
+                        .endResources()
                         .withNewLivenessProbe()
                            .withHttpGet(new HTTPGetActionBuilder().withPath("/ready").withPort(new IntOrString(8080)).withScheme("HTTP").build())
                            .withInitialDelaySeconds(30)
@@ -348,6 +424,36 @@ public class ApicurioStudioResources {
                .endPort()
                .withSessionAffinity("None")
                .withType("ClusterIP")
+            .endSpec();
+
+      return builder.build();
+   }
+
+   /**
+    *
+    * @param spec
+    * @return
+    */
+   public static Route prepareUIRoute(ApicurioStudioSpec spec) {
+      // Building a fresh new Route according the spec.
+      RouteBuilder builder = new RouteBuilder()
+            .withNewMetadata()
+               .withName(getUIDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_UI_MODULE)
+            .endMetadata()
+            .withNewSpec()
+               .withNewTo()
+                  .withKind("Service")
+                  .withName(getUIDeploymentName(spec))
+               .endTo()
+               .withNewPort()
+                  .withNewTargetPort(8080)
+               .endPort()
+               .withNewTls()
+                  .withTermination("edge")
+                  .withInsecureEdgeTerminationPolicy("Redirect")
+               .endTls()
             .endSpec();
 
       return builder.build();

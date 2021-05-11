@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,9 @@ public class KeycloakSpec {
     private boolean install = true;
     private String realm = "apicurio";
     private String url;
+    private String volumeSize = "500Mi";
+    private String user;
+    private String password;
 
     public boolean isInstall() {
         return install;
@@ -45,5 +48,29 @@ public class KeycloakSpec {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getVolumeSize() {
+        return volumeSize;
+    }
+
+    public void setVolumeSize(String volumeSize) {
+        this.volumeSize = volumeSize;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

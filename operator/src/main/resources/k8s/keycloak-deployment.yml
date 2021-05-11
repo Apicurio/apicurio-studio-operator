@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicurio-studio-auth
+  labels:
+    module: apicurio-studio-auth
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      module: apicurio-studio-auth
+  template:
+    metadata:
+      labels:
+        module: apicurio-studio-auth
+    spec:
+      containers:
+        - name: keycloak-studio-auth
+          image: apicurio/apicurio-studio-auth:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /auth
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 90
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /auth
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 80
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          volumeMounts:
+            - mountPath: /opt/jboss/keycloak/standalone/data
+              name: keycloak-data
+              readOnly: false
+          terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      securityContext: {}

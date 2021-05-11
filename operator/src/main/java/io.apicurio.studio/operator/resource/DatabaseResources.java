@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,20 @@
 package io.apicurio.studio.operator.resource;
 
 import io.apicurio.studio.operator.api.ApicurioStudioSpec;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSource;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.SecretKeySelector;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -120,12 +133,12 @@ public class DatabaseResources {
       switch (spec.getDatabase().getType()) {
          case MYSQL_TYPE:
             deployment = client.apps().deployments()
-                  .load(DatabaseResources.class.getResourceAsStream("/operator/src/main/resources/k8s/mysql-deployment.yml")).get();
+                  .load(DatabaseResources.class.getResourceAsStream("/k8s/mysql-deployment.yml")).get();
             break;
          case POSTGRESQL_TYPE:
          default:
             deployment = client.apps().deployments()
-                  .load(DatabaseResources.class.getResourceAsStream("/operator/src/main/resources/k8s/postgresql-deployment.yml")).get();
+                  .load(DatabaseResources.class.getResourceAsStream("/k8s/postgresql-deployment.yml")).get();
             deployment = new DeploymentBuilder(deployment)
                   .editSpec()
                      .editTemplate()
@@ -155,12 +168,10 @@ public class DatabaseResources {
                                           .build()
                               )
                            .endContainer()
-                           .addToVolumes(
-                                 new VolumeBuilder()
-                                       .withName("postgresql-apicurio")
-                                       .withPersistentVolumeClaim(new PersistentVolumeClaimVolumeSource(getDatabasePVCName(spec), false))
-                                       .build()
-                           )
+                           .addNewVolume()
+                              .withName("postgresql-apicurio")
+                              .withPersistentVolumeClaim(new PersistentVolumeClaimVolumeSource(getDatabasePVCName(spec), false))
+                           .endVolume()
                         .endSpec()
                      .endTemplate()
                   .endSpec()

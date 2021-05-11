@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package io.apicurio.studio.operator.api;
  */
 public class ApicurioStudioStatus {
 
+    private String studioUrl;
+    private String keycloakUrl;
     private State state = State.UNKNOWN;
     private boolean error;
     private String message;
@@ -36,6 +38,22 @@ public class ApicurioStudioStatus {
         CREATED,
         ERROR,
         UNKNOWN
+    }
+
+    public String getStudioUrl() {
+        return studioUrl;
+    }
+
+    public void setStudioUrl(String studioUrl) {
+        this.studioUrl = studioUrl;
+    }
+
+    public String getKeycloakUrl() {
+        return keycloakUrl;
+    }
+
+    public void setKeycloakUrl(String keycloakUrl) {
+        this.keycloakUrl = keycloakUrl;
     }
 
     public State getState() {
