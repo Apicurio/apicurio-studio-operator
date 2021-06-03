@@ -15,10 +15,15 @@
  */
 package io.apicurio.studio.operator.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
+ * This is the specification of the Keycloak module of Apicurio Studio.
  * @author laurent.broudoux@gmail.com
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class KeycloakSpec {
+
     private boolean install = true;
     private String realm = "apicurio";
     private String url;

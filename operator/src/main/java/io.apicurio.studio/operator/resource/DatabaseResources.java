@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 
 /**
+ * Holds utility methods to create Database resources from specification.
  * @author laurent.broudoux@gmail.com
  */
 public class DatabaseResources {
@@ -48,21 +49,48 @@ public class DatabaseResources {
    /** Spec type for a Mysql database. */
    public static final String MYSQL_TYPE = "mysql";
 
+   /** The name of the Database module. */
    public static final String APICURIO_STUDIO_DB_MODULE = "apicurio-studio-db";
 
    /**
-    *
-    * @param spec
-    * @return
+    * Get a JDBC connection URL from studio specifications.
+    * @param spec The studio custom resource.
+    * @return A connection URL for database.
+    */
+   public static String getDatabaseConnectionUrl(ApicurioStudioSpec spec) {
+      String databaseUrl = null;
+      // If database is provided, we already got it's host:port address.
+      if (!spec.getDatabase().isInstall() && spec.getDatabase().getUrl() != null) {
+         databaseUrl = spec.getDatabase().getUrl();
+      } else {
+         // Else we have to recompose it from Service/Deployment name.
+         databaseUrl = getDatabaseDeploymentName(spec);
+         switch (spec.getDatabase().getDriver()) {
+            case MYSQL_TYPE:
+               databaseUrl += ":3306";
+               break;
+            case POSTGRESQL_TYPE:
+            default:
+               databaseUrl += ":5432";
+         }
+      }
+      // Now compose a JDBC connection URL.
+      return "jdbc:" + spec.getDatabase().getDriver() + "://" + databaseUrl + "/" + spec.getDatabase().getDatabase();
+   }
+
+   /**
+    * Get the name of Secret holding database credentials.
+    * @param spec The studio custom resource.
+    * @return The secret name
     */
    public static String getDatabaseSecretName(ApicurioStudioSpec spec) {
       return spec.getName() + "-db-connection";
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare the Database credentials secret.
+    * @param spec The studio custom resource.
+    * @return A full Secret
     */
    public static Secret prepareDatabaseSecret(ApicurioStudioSpec spec) {
       // Building a fresh new Secret according the spec.
@@ -80,18 +108,18 @@ public class DatabaseResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Get the Database volume claim name from the spec.
+    * @param spec The studio custom resource.
+    * @return The claim name
     */
    public static String getDatabasePVCName(ApicurioStudioSpec spec) {
       return spec.getName() + "-db-claim";
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare the Database volume claim.
+    * @param spec The studio custom resource.
+    * @return A full PVC
     */
    public static PersistentVolumeClaim prepareDatabasePVC(ApicurioStudioSpec spec) {
       // Building a fresh new PersistentVolumeClain according the spec.
@@ -112,25 +140,25 @@ public class DatabaseResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Get the Database deployment name from spec.
+    * @param spec The studio custom resource.
+    * @return The deployment name
     */
    public static String getDatabaseDeploymentName(ApicurioStudioSpec spec) {
       return spec.getName() + "-db";
    }
 
    /**
-    *
-    * @param client
-    * @param spec
-    * @return
+    * Prepare a new Deployment for the Database.
+    * @param client A Kubernetes API client for loading resources.
+    * @param spec The studio custom resource.
+    * @return The full deployment.
     */
    public static Deployment prepareDatabaseDeployment(KubernetesClient client, ApicurioStudioSpec spec) {
 
       Deployment deployment = null;
 
-      switch (spec.getDatabase().getType()) {
+      switch (spec.getDatabase().getDriver()) {
          case MYSQL_TYPE:
             deployment = client.apps().deployments()
                   .load(DatabaseResources.class.getResourceAsStream("/k8s/mysql-deployment.yml")).get();
@@ -193,9 +221,9 @@ public class DatabaseResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare a new Service for the Database.
+    * @param spec The studio custom resource.
+    * @return The full service.s
     */
    public static Service prepareDatabaseService(ApicurioStudioSpec spec) {
       // Building a fresh new Service according the spec.
@@ -215,7 +243,7 @@ public class DatabaseResources {
       Service service = builder.build();
 
       // Complete port depending on database type.
-      switch (spec.getDatabase().getType()) {
+      switch (spec.getDatabase().getDriver()) {
          case MYSQL_TYPE:
             service.getSpec().setPorts(
                   List.of(new ServicePortBuilder()

@@ -9,179 +9,183 @@ spec:
     kind: ApicurioStudio
     plural: apicuriostudios
     shortNames:
-    - studio
+      - studio
     singular: apicuriostudio
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        properties:
-          status:
-            properties:
-              uiModule:
-                properties:
-                  lastTransitionTime:
-                    type: string
-                  state:
-                    enum:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            status:
+              properties:
+                uiModule:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    state:
+                      enum:
+                        - UNKNOWN
+                        - PREEXISTING
+                        - ERROR
+                        - DEPLOYING
+                        - READY
+                      type: string
+                    error:
+                      type: boolean
+                    message:
+                      type: string
+                  type: object
+                apiUrl:
+                  type: string
+                wsUrl:
+                  type: string
+                keycloakUrl:
+                  type: string
+                state:
+                  enum:
                     - UNKNOWN
                     - PREEXISTING
                     - ERROR
                     - DEPLOYING
-                    - CREATED
-                    type: string
-                  error:
-                    type: boolean
-                  message:
-                    type: string
-                type: object
-              keycloakUrl:
-                type: string
-              state:
-                enum:
-                - UNKNOWN
-                - PREEXISTING
-                - ERROR
-                - DEPLOYING
-                - CREATED
-                type: string
-              error:
-                type: boolean
-              keycloakModule:
-                properties:
-                  lastTransitionTime:
-                    type: string
-                  state:
-                    enum:
-                    - UNKNOWN
-                    - PREEXISTING
-                    - ERROR
-                    - DEPLOYING
-                    - CREATED
-                    type: string
-                  error:
-                    type: boolean
-                  message:
-                    type: string
-                type: object
-              message:
-                type: string
-              studioUrl:
-                type: string
-              wsModule:
-                properties:
-                  lastTransitionTime:
-                    type: string
-                  state:
-                    enum:
-                    - UNKNOWN
-                    - PREEXISTING
-                    - ERROR
-                    - DEPLOYING
-                    - CREATED
-                    type: string
-                  error:
-                    type: boolean
-                  message:
-                    type: string
-                type: object
-              databaseModule:
-                properties:
-                  lastTransitionTime:
-                    type: string
-                  state:
-                    enum:
-                    - UNKNOWN
-                    - PREEXISTING
-                    - ERROR
-                    - DEPLOYING
-                    - CREATED
-                    type: string
-                  error:
-                    type: boolean
-                  message:
-                    type: string
-                type: object
-              apiModule:
-                properties:
-                  lastTransitionTime:
-                    type: string
-                  state:
-                    enum:
-                    - UNKNOWN
-                    - PREEXISTING
-                    - ERROR
-                    - DEPLOYING
-                    - CREATED
-                    type: string
-                  error:
-                    type: boolean
-                  message:
-                    type: string
-                type: object
-            type: object
-          spec:
-            properties:
-              url:
-                type: string
-              features:
-                properties:
-                  asyncAPI:
-                    type: boolean
-                  microcks:
-                    properties:
-                      clientId:
-                        type: string
-                      apiUrl:
-                        type: string
-                      clientSecret:
-                        type: string
-                    type: object
-                  graphQL:
-                    type: boolean
-                type: object
-              keycloak:
-                properties:
-                  password:
-                    type: string
-                  url:
-                    type: string
-                  volumeSize:
-                    type: string
-                  user:
-                    type: string
-                  realm:
-                    type: string
-                  install:
-                    type: boolean
-                type: object
-              database:
-                properties:
-                  database:
-                    type: string
-                  password:
-                    type: string
-                  url:
-                    type: string
-                  volumeSize:
-                    type: string
-                  type:
-                    type: string
-                  user:
-                    type: string
-                  rootPassword:
-                    type: string
-                  driver:
-                    type: string
-                  install:
-                    type: boolean
-                type: object
-              name:
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
+                    - READY
+                  type: string
+                error:
+                  type: boolean
+                keycloakModule:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    state:
+                      enum:
+                        - UNKNOWN
+                        - PREEXISTING
+                        - ERROR
+                        - DEPLOYING
+                        - READY
+                      type: string
+                    error:
+                      type: boolean
+                    message:
+                      type: string
+                  type: object
+                message:
+                  type: string
+                studioUrl:
+                  type: string
+                wsModule:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    state:
+                      enum:
+                        - UNKNOWN
+                        - PREEXISTING
+                        - ERROR
+                        - DEPLOYING
+                        - READY
+                      type: string
+                    error:
+                      type: boolean
+                    message:
+                      type: string
+                  type: object
+                databaseModule:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    state:
+                      enum:
+                        - UNKNOWN
+                        - PREEXISTING
+                        - ERROR
+                        - DEPLOYING
+                        - READY
+                      type: string
+                    error:
+                      type: boolean
+                    message:
+                      type: string
+                  type: object
+                apiModule:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    state:
+                      enum:
+                        - UNKNOWN
+                        - PREEXISTING
+                        - ERROR
+                        - DEPLOYING
+                        - READY
+                      type: string
+                    error:
+                      type: boolean
+                    message:
+                      type: string
+                  type: object
+              type: object
+            spec:
+              properties:
+                url:
+                  type: string
+                features:
+                  properties:
+                    asyncAPI:
+                      type: boolean
+                    microcks:
+                      properties:
+                        clientId:
+                          type: string
+                        apiUrl:
+                          type: string
+                        clientSecret:
+                          type: string
+                      type: object
+                    graphQL:
+                      type: boolean
+                  type: object
+                keycloak:
+                  properties:
+                    password:
+                      type: string
+                    url:
+                      type: string
+                    volumeSize:
+                      type: string
+                    user:
+                      type: string
+                    realm:
+                      type: string
+                    install:
+                      type: boolean
+                  type: object
+                database:
+                  properties:
+                    database:
+                      type: string
+                    password:
+                      type: string
+                    url:
+                      type: string
+                    volumeSize:
+                      type: string
+                    type:
+                      type: string
+                    user:
+                      type: string
+                    rootPassword:
+                      type: string
+                    driver:
+                      type: string
+                    install:
+                      type: boolean
+                  type: object
+                name:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

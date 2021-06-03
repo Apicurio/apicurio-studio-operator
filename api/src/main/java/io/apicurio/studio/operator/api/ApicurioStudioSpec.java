@@ -15,9 +15,13 @@
  */
 package io.apicurio.studio.operator.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
+ * This is the specification of the ApicurioStudio API.
  * @author laurent.broudoux@gmail.com
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApicurioStudioSpec {
 
     private String name;

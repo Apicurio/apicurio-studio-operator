@@ -15,15 +15,20 @@
  */
 package io.apicurio.studio.operator.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
+ * This is the specification of the Database module of Apicurio Studio.
  * @author laurent.broudoux@gmail.com
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DatabaseSpec {
+
     private boolean install = true;
     private String driver = "postgresql";
     private String type = "postgresql9";
     private String database = "apicuriodb";
-    private String url = "jdbc:postgresql://postgresql:5432/apicuriodb";
+    private String url;
     private String volumeSize = "1Gi";
     private String user;
     private String password;

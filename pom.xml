@@ -22,6 +22,8 @@
     <maven.compiler.target>11</maven.compiler.target>
     <quarkus.version>1.13.3.Final</quarkus.version>
     <quarkus.operator-sdk.version>1.8.4</quarkus.operator-sdk.version>
+    <!-- <quarkus.version>1.13.6.Final</quarkus.version> -->
+    <!-- <quarkus.operator-sdk.version>1.9.0-SNAPSHOT</quarkus.operator-sdk.version> -->
   </properties>
 
   <dependencyManagement>

@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.model.annotation.ShortNames;
 import io.fabric8.kubernetes.model.annotation.Version;
 
 /**
+ * This is the API definition for ApicurioStudio custom resource.
  * @author laurent.broudoux@gmail.com
  */
 @Group("studio.apicur.io")
@@ -31,4 +32,15 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Plural("ApicurioStudios")
 public class ApicurioStudio extends CustomResource<ApicurioStudioSpec, ApicurioStudioStatus> implements Namespaced {
 
+   /*
+   @JsonIgnore
+   public boolean isDeploying() {
+      return getStatus().getState().equals(ApicurioStudioStatus.State.DEPLOYING);
+   }
+
+   @JsonIgnore
+   public boolean isReady() {
+      return getStatus().getState().equals(ApicurioStudioStatus.State.READY);
+   }
+   */
 }

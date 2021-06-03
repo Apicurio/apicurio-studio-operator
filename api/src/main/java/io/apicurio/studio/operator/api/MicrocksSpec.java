@@ -15,9 +15,13 @@
  */
 package io.apicurio.studio.operator.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
+ * This is the specification of the Microcks integration feature of Apicurio Studio.
  * @author laurent.broudoux@gmail.com
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MicrocksSpec {
 
     private String apiUrl;

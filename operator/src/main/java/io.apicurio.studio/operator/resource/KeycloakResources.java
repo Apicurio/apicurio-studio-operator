@@ -37,24 +37,26 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Map;
 
 /**
+ * Holds utility methods to create Keycloak resources from specification.
  * @author laurent.broudoux@gmail.com
  */
 public class KeycloakResources {
 
+   /** The name of the Keycloak module. */
    public static final String APICURIO_STUDIO_AUTH_MODULE = "apicurio-studio-auth";
 
    /**
-    *
-    * @param spec
-    * @return
+    * Get the Keycloak credentials secret name.
+    * @param spec The studio custom resource.
+    * @return The secret name
     */
    public static String getKeycloakSecretName(ApicurioStudioSpec spec) {
       return spec.getName() + "-auth-keycloak";
    }
 
    /**
-    *
-    * @param spec
+    * Prepare the Keycloak credetnials secret.
+    * @param spec The studio custom resource.
     * @return
     */
    public static Secret prepareKeycloakSecret(ApicurioStudioSpec spec) {
@@ -72,18 +74,18 @@ public class KeycloakResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Get the Keycloak claim name.
+    * @param spec The studio custom resource.
+    * @return The claim namee
     */
    public static String getKeycloakPVCName(ApicurioStudioSpec spec) {
       return spec.getName() + "-auth-claim";
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare the Keycloak volume claim.
+    * @param spec The studio custom resource.
+    * @return A full PVC
     */
    public static PersistentVolumeClaim prepareKeycloakDbPVC(ApicurioStudioSpec spec) {
       // Building a fresh new PersistentVolumeClain according the spec.
@@ -104,19 +106,19 @@ public class KeycloakResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Get the deployment name for Keycloak module.
+    * @param spec The studio custom resource.
+    * @return The deployment name
     */
    public static String getKeycloakDeploymentName(ApicurioStudioSpec spec) {
       return spec.getName() + "-auth";
    }
 
    /**
-    *
-    * @param client
-    * @param spec
-    * @return
+    * Prepare a Deployment for Keycloak module.
+    * @param client A Kubernetes API client to load resources from.
+    * @param spec The studio custom resource.
+    * @return A full deployment
     */
    public static Deployment prepareKeycloakDeployment(KubernetesClient client, ApicurioStudioSpec spec, ApicurioStudioStatus status) {
       // Building a fresh new Deployment according the spec.
@@ -178,9 +180,9 @@ public class KeycloakResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare a Service for Keycloak module.
+    * @param spec The studio custom resource.
+    * @return A full service
     */
    public static Service prepareKeycloakService(ApicurioStudioSpec spec) {
       // Building a fresh new Service according the spec.
@@ -206,9 +208,9 @@ public class KeycloakResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare an OpenShift Route for Keycloak module.
+    * @param spec The studio custom resource.
+    * @return A full route
     */
    public static Route prepareKeycloakRoute(ApicurioStudioSpec spec) {
       // Building a fresh new Route according the spec.

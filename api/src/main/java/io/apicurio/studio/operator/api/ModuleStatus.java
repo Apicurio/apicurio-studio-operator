@@ -18,17 +18,23 @@ package io.apicurio.studio.operator.api;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import io.fabric8.kubernetes.api.model.KubernetesResource;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
+ * This is a kubernetes resources for holding status of a specific studio module.
  * @author laurent.broudoux@gmail.com
  */
-public class ModuleStatus implements KubernetesResource {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ModuleStatus {
 
     private ApicurioStudioStatus.State state = ApicurioStudioStatus.State.UNKNOWN;
     private boolean error;
     private String message;
     private String lastTransitionTime;
+
+    public ModuleStatus() {
+    }
 
     public ModuleStatus(ApicurioStudioStatus.State state) {
         this.state = state;
@@ -73,5 +79,35 @@ public class ModuleStatus implements KubernetesResource {
 
     public void setLastTransitionTime(String lastTransitionTime) {
         this.lastTransitionTime = lastTransitionTime;
+    }
+
+    @JsonIgnore
+    public void updateLastTransitionTime() {
+        this.lastTransitionTime = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+    }
+
+    @JsonIgnore
+    public boolean isDeploying() {
+        return getState().equals(ApicurioStudioStatus.State.DEPLOYING);
+    }
+
+    @JsonIgnore
+    public boolean isReady() {
+        return getState().equals(ApicurioStudioStatus.State.READY);
+    }
+
+    @JsonIgnore
+    public boolean isPreexisting() {
+        return getState().equals(ApicurioStudioStatus.State.PREEXISTING);
+    }
+
+    @Override
+    @JsonIgnore
+    public String toString() {
+        return "ModuleStatus{state=" + state + ","
+              + "error=" + error + ","
+              + "message=" + message + ","
+              + "lastTransitionTime=" + lastTransitionTime + "}";
+
     }
 }

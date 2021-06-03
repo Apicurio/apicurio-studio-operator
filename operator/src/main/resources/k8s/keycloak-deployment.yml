@@ -4,6 +4,7 @@ metadata:
   name: apicurio-studio-auth
   labels:
     module: apicurio-studio-auth
+    app.kubernetes.io/managed-by: apicurio-studio-operator
 spec:
   replicas: 1
   strategy:

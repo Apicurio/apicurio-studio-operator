@@ -23,6 +23,7 @@ import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
 
 /**
+ * This is the main entry point for Quarkus based operator.
  * @author laurent.broudoux&gmail.com
  */
 @QuarkusMain

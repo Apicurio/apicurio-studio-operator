@@ -4,6 +4,7 @@ metadata:
   name: apicurio-studio-db
   labels:
     module: apicurio-studio-db
+    app.kubernetes.io/managed-by: apicurio-studio-operator
 spec:
   replicas: 1
   strategy:

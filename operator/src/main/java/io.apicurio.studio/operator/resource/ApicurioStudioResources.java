@@ -15,6 +15,7 @@
  */
 package io.apicurio.studio.operator.resource;
 
+import io.apicurio.studio.operator.Constants;
 import io.apicurio.studio.operator.api.ApicurioStudioSpec;
 import io.apicurio.studio.operator.api.ApicurioStudioStatus;
 import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
@@ -30,6 +31,7 @@ import io.fabric8.openshift.api.model.RouteBuilder;
 import java.util.Map;
 
 /**
+ * Holds utility methods to create Apicurio resources from specification.
  * @author laurent.broudoux@gmail.com
  */
 public class ApicurioStudioResources {
@@ -60,6 +62,7 @@ public class ApicurioStudioResources {
                .withName(getAPIDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_API_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
             .endMetadata()
             .withNewSpec()
                .withReplicas(1)
@@ -81,7 +84,7 @@ public class ApicurioStudioResources {
                         .addNewEnv().withName("APICURIO_KC_REALM").withValue(spec.getKeycloak().getRealm()).endEnv()
                         .addNewEnv().withName("APICURIO_DB_TYPE").withValue(spec.getDatabase().getType()).endEnv()
                         .addNewEnv().withName("APICURIO_DB_DRIVER_NAME").withValue(spec.getDatabase().getDriver()).endEnv()
-                        .addNewEnv().withName("APICURIO_DB_CONNECTION_URL").withValue(spec.getDatabase().getUrl()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_CONNECTION_URL").withValue(DatabaseResources.getDatabaseConnectionUrl(spec)).endEnv()
                         .addNewEnv()
                            .withName("APICURIO_DB_USER_NAME")
                            .withNewValueFrom()
@@ -121,6 +124,21 @@ public class ApicurioStudioResources {
                .endTemplate()
             .endSpec();
 
+      // Add optional features if specified.
+      if (spec.getFeatures().getMicrocks().getApiUrl() != null) {
+         builder.editSpec()
+                  .editTemplate()
+                     .editSpec()
+                        .editContainer(0)
+                           .addNewEnv().withName("APICURIO_MICROCKS_API_URL").withValue(spec.getFeatures().getMicrocks().getApiUrl()).endEnv()
+                           .addNewEnv().withName("APICURIO_MICROCKS_CLIENT_ID").withValue(spec.getFeatures().getMicrocks().getClientId()).endEnv()
+                           .addNewEnv().withName("APICURIO_MICROCKS_CLIENT_SECRET").withValue(spec.getFeatures().getMicrocks().getClientSecret()).endEnv()
+                        .endContainer()
+                     .endSpec()
+                  .endTemplate()
+               .endSpec();
+      }
+
       return builder.build();
    }
 
@@ -136,6 +154,7 @@ public class ApicurioStudioResources {
                .withName(getAPIDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_API_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
                .addToAnnotations("prometheus.io/scrape", "true")
                .addToAnnotations("prometheus.io.path", "/system/metrics")
             .endMetadata()
@@ -155,9 +174,9 @@ public class ApicurioStudioResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare a new OpenShift Route for the API module.
+    * @param spec The specification from custom resource
+    * @return The full Route
     */
    public static Route prepareAPIRoute(ApicurioStudioSpec spec) {
       // Building a fresh new Route according the spec.
@@ -166,6 +185,7 @@ public class ApicurioStudioResources {
                .withName(getAPIDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_API_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
             .endMetadata()
             .withNewSpec()
                .withNewTo()
@@ -205,6 +225,7 @@ public class ApicurioStudioResources {
                .withName(getWSDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_WS_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
             .endMetadata()
             .withNewSpec()
                .withReplicas(1)
@@ -224,7 +245,7 @@ public class ApicurioStudioResources {
                         .addNewPort().withContainerPort(8080).withProtocol("TCP").endPort()
                         .addNewEnv().withName("APICURIO_DB_TYPE").withValue(spec.getDatabase().getType()).endEnv()
                         .addNewEnv().withName("APICURIO_DB_DRIVER_NAME").withValue(spec.getDatabase().getDriver()).endEnv()
-                        .addNewEnv().withName("APICURIO_DB_CONNECTION_URL").withValue(spec.getDatabase().getUrl()).endEnv()
+                        .addNewEnv().withName("APICURIO_DB_CONNECTION_URL").withValue(DatabaseResources.getDatabaseConnectionUrl(spec)).endEnv()
                         .addNewEnv()
                            .withName("APICURIO_DB_USER_NAME")
                            .withNewValueFrom()
@@ -279,6 +300,7 @@ public class ApicurioStudioResources {
                .withName(getWSDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_WS_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
                .addToAnnotations("prometheus.io/scrape", "true")
                .addToAnnotations("prometheus.io.path", "/metrics")
             .endMetadata()
@@ -298,9 +320,9 @@ public class ApicurioStudioResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare a new OpenShift Route for the WS module.
+    * @param spec The specification from custom resource
+    * @return The full Route
     */
    public static Route prepareWSRoute(ApicurioStudioSpec spec) {
       // Building a fresh new Route according the spec.
@@ -309,6 +331,7 @@ public class ApicurioStudioResources {
                .withName(getWSDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_WS_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
             .endMetadata()
             .withNewSpec()
                .withNewTo()
@@ -349,6 +372,7 @@ public class ApicurioStudioResources {
                .withName(getUIDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_UI_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
             .endMetadata()
             .withNewSpec()
                .withReplicas(1)
@@ -368,8 +392,8 @@ public class ApicurioStudioResources {
                         .addNewPort().withContainerPort(8080).withProtocol("TCP").endPort()
                         .addNewEnv().withName("APICURIO_KC_AUTH_URL").withValue("https://" + status.getKeycloakUrl() + "/auth").endEnv()
                         .addNewEnv().withName("APICURIO_KC_REALM").withValue(spec.getKeycloak().getRealm()).endEnv()
-                        .addNewEnv().withName("APICURIO_UI_HUB_API_URL").withValue("https://" + status.getStudioUrl()).endEnv()
-                        .addNewEnv().withName("APICURIO_UI_EDITING_URL").withValue("https://" + status.getStudioUrl()).endEnv()
+                        .addNewEnv().withName("APICURIO_UI_HUB_API_URL").withValue("https://" + status.getApiUrl()).endEnv()
+                        .addNewEnv().withName("APICURIO_UI_EDITING_URL").withValue("wss://" + status.getWsUrl()).endEnv()
                         .addNewEnv().withName("APICURIO_UI_LOGOUT_REDIRECT").withValue("/").endEnv()
                         .withNewResources()
                            .addToRequests(Map.of("cpu", new Quantity("100m")))
@@ -397,6 +421,41 @@ public class ApicurioStudioResources {
                   .endSpec()
                .endTemplate()
             .endSpec();
+
+      // Add optional features if specified.
+      if (spec.getFeatures().isAsyncAPI()) {
+         builder.editSpec()
+               .editTemplate()
+                  .editSpec()
+                     .editContainer(0)
+                        .addNewEnv().withName("APICURIO_UI_FEATURE_ASYNCAPI").withValue("true").endEnv()
+                     .endContainer()
+                  .endSpec()
+               .endTemplate()
+               .endSpec();
+      }
+      if (spec.getFeatures().isGraphQL()) {
+         builder.editSpec()
+               .editTemplate()
+                  .editSpec()
+                     .editContainer(0)
+                        .addNewEnv().withName("APICURIO_UI_FEATURE_GRAPHQL").withValue("true").endEnv()
+                     .endContainer()
+                  .endSpec()
+               .endTemplate()
+               .endSpec();
+      }
+      if (spec.getFeatures().getMicrocks().getApiUrl() != null) {
+         builder.editSpec()
+               .editTemplate()
+                  .editSpec()
+                     .editContainer(0)
+                        .addNewEnv().withName("APICURIO_UI_FEATURE_MICROCKS").withValue("true").endEnv()
+                     .endContainer()
+                  .endSpec()
+               .endTemplate()
+               .endSpec();
+      }
 
       return builder.build();
    }
@@ -430,9 +489,9 @@ public class ApicurioStudioResources {
    }
 
    /**
-    *
-    * @param spec
-    * @return
+    * Prepare a new OpenShift Route for the UI module.
+    * @param spec The specification from custom resource
+    * @return The full Route
     */
    public static Route prepareUIRoute(ApicurioStudioSpec spec) {
       // Building a fresh new Route according the spec.

@@ -15,27 +15,37 @@
  */
 package io.apicurio.studio.operator.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 /**
+ * This is the status of the ApicurioStudio API.
  * @author laurent.broudoux@gmail.com
  */
+@JsonPropertyOrder({"state", "error", "message", "studioUrl", "apiUrl", "wsUrl", "keycloakUrl",
+        "apiModule", "wsModule", "uiModule", "keycloakModule", "databaseModule"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApicurioStudioStatus {
 
-    private String studioUrl;
-    private String keycloakUrl;
     private State state = State.UNKNOWN;
     private boolean error;
     private String message;
+    private String studioUrl;
+    private String apiUrl;
+    private String wsUrl;
+    private String keycloakUrl;
 
-    private ModuleStatus apiModule;
-    private ModuleStatus wsModule;
-    private ModuleStatus uiModule;
-    private ModuleStatus keycloakModule;
-    private ModuleStatus databaseModule;
+    private ModuleStatus apiModule = new ModuleStatus(State.UNKNOWN);
+    private ModuleStatus wsModule = new ModuleStatus(State.UNKNOWN);
+    private ModuleStatus uiModule = new ModuleStatus(State.UNKNOWN);
+    private ModuleStatus keycloakModule = new ModuleStatus(State.UNKNOWN);
+    private ModuleStatus databaseModule = new ModuleStatus(State.UNKNOWN);
 
     public enum State {
         PREEXISTING,
         DEPLOYING,
-        CREATED,
+        READY,
         ERROR,
         UNKNOWN
     }
@@ -54,6 +64,22 @@ public class ApicurioStudioStatus {
 
     public void setKeycloakUrl(String keycloakUrl) {
         this.keycloakUrl = keycloakUrl;
+    }
+
+    public String getApiUrl() {
+        return apiUrl;
+    }
+
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
+
+    public String getWsUrl() {
+        return wsUrl;
+    }
+
+    public void setWsUrl(String wsUrl) {
+        this.wsUrl = wsUrl;
     }
 
     public State getState() {
@@ -118,5 +144,15 @@ public class ApicurioStudioStatus {
 
     public void setDatabaseModule(ModuleStatus databaseModule) {
         this.databaseModule = databaseModule;
+    }
+
+    @JsonIgnore
+    public boolean isDeploying() {
+        return getState().equals(ApicurioStudioStatus.State.DEPLOYING);
+    }
+
+    @JsonIgnore
+    public boolean isReady() {
+        return getState().equals(ApicurioStudioStatus.State.READY);
     }
 }
