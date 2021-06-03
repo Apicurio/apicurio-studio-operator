@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: apicurio-studio-operator
+subjects:
+  - kind: ServiceAccount
+    name: apicurio-studio-operator
+roleRef:
+  kind: Role
+  name: apicurio-studio-operator
+  apiGroup: rbac.authorization.k8s.io
