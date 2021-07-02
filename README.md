@@ -83,7 +83,6 @@ spec:
 Here's now a complete `MicrocksInstall` CRD that I use - for example - on Minikube for testing vanilla Kubernetes support. This one adds the `url` attributes that are mandatory on vanilla Kubernetes.
 
 ```yaml
-
 apiVersion: studio.apicur.io/v1alpha1
 kind: ApicurioStudio
 metadata:
@@ -94,8 +93,9 @@ spec:
     install: true
     realm: apicurio
     volumeSize: 1Gi
-  database: apicuriodb
+  database:
     install: true
+    database: apicuriodb
     driver: postgresql
     type: postgresql9
     volumeSize: 1Gi
