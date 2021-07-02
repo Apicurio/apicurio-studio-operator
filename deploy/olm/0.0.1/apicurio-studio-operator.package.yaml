@@ -1,0 +1,4 @@
+packageName: apicurio-studio
+channels:
+  - name: beta
+    currentCSV: apicurio-studio-operator.v0.0.1

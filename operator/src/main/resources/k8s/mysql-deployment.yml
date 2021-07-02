@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicurio-studio-db
+  labels:
+    module: apicurio-studio-db
+    app.kubernetes.io/managed-by: apicurio-studio-operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      module: apicurio-studio-db
+  template:
+    metadata:
+      labels:
+        module: apicurio-studio-db
+    spec:
+      containers:
+        - name: mysql
+          args:
+            - --default-authentication-plugin=mysql_native_password
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+            - --ignore-db-dir=lost+found
+          image: percona:5.7
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysql-apicurio
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext:
+        fsGroup: 999

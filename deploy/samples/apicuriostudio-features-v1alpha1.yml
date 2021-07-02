@@ -1,0 +1,13 @@
+apiVersion: studio.apicur.io/v1alpha1
+kind: ApicurioStudio
+metadata:
+  name: apicurio-sample
+spec:
+  name: apicurio-sample
+  features:
+    asyncAPI: true
+    graphQL: true
+    microcks:
+      apiUrl: https://microcks-microcks.apps.cluster-0f5f.0f5f.sandbox1056.opentlc.com/api
+      clientId: microcks-serviceaccount
+      clientSecret: ab54d329-e435-41ae-a900-ec6b3fe15c54
