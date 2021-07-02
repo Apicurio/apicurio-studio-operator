@@ -50,6 +50,9 @@ public class ApicurioStudioStatus {
         UNKNOWN
     }
 
+    public ApicurioStudioStatus() {
+    }
+
     public String getStudioUrl() {
         return studioUrl;
     }

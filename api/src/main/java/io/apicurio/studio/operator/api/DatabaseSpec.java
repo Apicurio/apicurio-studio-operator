@@ -16,12 +16,17 @@
 package io.apicurio.studio.operator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.sundr.builder.annotations.Buildable;
 
 /**
  * This is the specification of the Database module of Apicurio Studio.
  * @author laurent.broudoux@gmail.com
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Buildable(
+      editableEnabled = false,
+      builderPackage = "io.fabric8.kubernetes.api.builder"
+)
 public class DatabaseSpec {
 
     private boolean install = true;
@@ -33,6 +38,9 @@ public class DatabaseSpec {
     private String user;
     private String password;
     private String rootPassword;
+
+    public DatabaseSpec() {
+    }
 
     public boolean isInstall() {
         return install;

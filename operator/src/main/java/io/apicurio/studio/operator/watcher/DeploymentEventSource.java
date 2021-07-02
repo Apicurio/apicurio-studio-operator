@@ -22,13 +22,14 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 
+import io.javaoperatorsdk.operator.processing.event.AbstractEventSource;
 import org.jboss.logging.Logger;
 
 /**
  * A watcher for deployments created by the operator.
  * @author laurent.broudoux@gmail.com
  */
-public class DeploymentEventSource implements Watcher<Deployment> {
+public class DeploymentEventSource extends AbstractEventSource implements Watcher<Deployment> {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -60,6 +61,12 @@ public class DeploymentEventSource implements Watcher<Deployment> {
       logger.infof("Event for action: '%s', Deployment: '%s' (rr='%s')", action.name(),
             deployment.getMetadata().getName(), deployment.getStatus().getReadyReplicas());
 
+      if (action == Action.ERROR) {
+         logger.warnf("Skipping '%s' event for custom resource uid: '%s', version: '%s'",
+               action, deployment.getMetadata().getUid(), deployment.getMetadata().getGeneration());
+         return;
+      }
+      /*
       switch (action) {
          case ADDED:
             break;
@@ -69,7 +76,8 @@ public class DeploymentEventSource implements Watcher<Deployment> {
          case DELETED:
             controller.handleDeletedDeployment(deployment);
             break;
-      }
+      }*/
+      eventHandler.handleEvent(new DeploymentEvent(action, deployment, this));
    }
 
    @Override

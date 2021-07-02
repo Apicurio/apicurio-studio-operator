@@ -1,0 +1,17 @@
+[
+  {
+    "name" : "io.apicurio.studio.operator.api.KeycloakSpec", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
+  },
+  {
+    "name" : "io.apicurio.studio.operator.api.DatabaseSpec", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
+  },
+  {
+    "name" : "io.apicurio.studio.operator.api.FeaturesSpec", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
+  },
+  {
+    "name" : "io.apicurio.studio.operator.api.MicrocksSpec", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
+  },
+  {
+    "name" : "io.apicurio.studio.operator.api.ModuleStatus", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
+  }
+]

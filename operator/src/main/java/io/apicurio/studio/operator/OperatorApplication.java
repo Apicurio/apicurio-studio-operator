@@ -17,20 +17,28 @@ package io.apicurio.studio.operator;
 
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javaoperatorsdk.operator.Operator;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
+import org.jboss.logging.Logger;
 
 /**
  * This is the main entry point for Quarkus based operator.
- * @author laurent.broudoux&gmail.com
+ * @author laurent.broudoux@gmail.com
  */
 @QuarkusMain
 public class OperatorApplication implements QuarkusApplication {
 
+   /** Get a JBoss logging logger. */
+   private final Logger logger = Logger.getLogger(getClass());
+
    @Inject
    Operator operator;
+
+   @Inject
+   ObjectMapper objectMapper;
 
    public static void main(String... args) {
       Quarkus.run(OperatorApplication.class, args);
@@ -38,6 +46,7 @@ public class OperatorApplication implements QuarkusApplication {
 
    @Override
    public int run(String... args) throws Exception {
+      logger.info("Starting Apicurio Studio operator");
       operator.start();
       Quarkus.waitForExit();
       return 0;

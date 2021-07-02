@@ -16,12 +16,17 @@
 package io.apicurio.studio.operator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.sundr.builder.annotations.Buildable;
 
 /**
  * This is the specification of the Keycloak module of Apicurio Studio.
  * @author laurent.broudoux@gmail.com
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Buildable(
+      editableEnabled = false,
+      builderPackage = "io.fabric8.kubernetes.api.builder"
+)
 public class KeycloakSpec {
 
     private boolean install = true;
@@ -30,6 +35,9 @@ public class KeycloakSpec {
     private String volumeSize = "500Mi";
     private String user;
     private String password;
+
+    public KeycloakSpec() {
+    }
 
     public boolean isInstall() {
         return install;

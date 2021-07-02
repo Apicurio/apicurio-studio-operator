@@ -16,12 +16,17 @@
 package io.apicurio.studio.operator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.sundr.builder.annotations.Buildable;
 
 /**
  * This is the specification of the ApicurioStudio API.
  * @author laurent.broudoux@gmail.com
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Buildable(
+      editableEnabled = false,
+      builderPackage = "io.fabric8.kubernetes.api.builder"
+)
 public class ApicurioStudioSpec {
 
     private String name;
@@ -29,6 +34,9 @@ public class ApicurioStudioSpec {
     private KeycloakSpec keycloak = new KeycloakSpec();
     private DatabaseSpec database = new DatabaseSpec();
     private FeaturesSpec features = new FeaturesSpec();
+
+    public ApicurioStudioSpec() {
+    }
 
     public String getName() {
         return name;

@@ -16,17 +16,25 @@
 package io.apicurio.studio.operator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.sundr.builder.annotations.Buildable;
 
 /**
  * This is the specification of the Microcks integration feature of Apicurio Studio.
  * @author laurent.broudoux@gmail.com
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Buildable(
+      editableEnabled = false,
+      builderPackage = "io.fabric8.kubernetes.api.builder"
+)
 public class MicrocksSpec {
 
     private String apiUrl;
     private String clientId = "microcks-serviceaccount";
     private String clientSecret;
+
+    public MicrocksSpec() {
+    }
 
     public String getApiUrl() {
         return apiUrl;

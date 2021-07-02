@@ -20,6 +20,7 @@ import javax.inject.Inject;
 import io.apicurio.studio.operator.api.ModuleStatus;
 import io.apicurio.studio.operator.resource.DatabaseResources;
 import io.apicurio.studio.operator.resource.KeycloakResources;
+import io.apicurio.studio.operator.watcher.DeploymentEvent;
 import io.apicurio.studio.operator.watcher.DeploymentEventSource;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
@@ -29,6 +30,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.Watcher.Action;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.javaoperatorsdk.operator.processing.event.Event;
 import io.javaoperatorsdk.operator.processing.event.internal.CustomResourceEvent;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.jboss.logging.Logger;
@@ -69,7 +71,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
    @Override
    public void init(EventSourceManager eventSourceManager) {
       this.deploymentEventSource = DeploymentEventSource.createAndRegisterWatch(this, client);
-      //eventSourceManager.registerEventSource("deployment-event-source", this.deploymentEventSource);
+      eventSourceManager.registerEventSource("deployment-event-source", this.deploymentEventSource);
    }
 
    @Override
@@ -111,12 +113,35 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
             // Create a vanilla Kubernetes Ingress...
          }
 
-         createOrUpdateKeycloakResources(apicurioStudio);
-         createOrUpdateDatabaseResources(apicurioStudio);
-         createOrUpdateApicurioStudioResources(apicurioStudio);
-         apicurioStudio.getStatus().setState(ApicurioStudioStatus.State.DEPLOYING);
-         logger.infof("Finishing the reconciliation loop with update of Status");
-         return UpdateControl.updateStatusSubResource(apicurioStudio);
+         try {
+            createOrUpdateKeycloakResources(apicurioStudio);
+            createOrUpdateDatabaseResources(apicurioStudio);
+            createOrUpdateApicurioStudioResources(apicurioStudio);
+            apicurioStudio.getStatus().setState(ApicurioStudioStatus.State.DEPLOYING);
+            logger.infof("Finishing the reconciliation loop with update of Status");
+            return UpdateControl.updateStatusSubResource(apicurioStudio);
+         } catch (Throwable t) {
+            t.printStackTrace();
+            logger.error("Caught a Throwable", t);
+         }
+      }
+
+      List<Event> allEvents = context.getEvents().getList();
+      for (Event event : allEvents) {
+         if (event instanceof DeploymentEvent) {
+            DeploymentEvent depEvent = (DeploymentEvent) event;
+            logger.infof("Got a Deployment event for action '%s' on resource '%s'",
+                  depEvent.getAction(), depEvent.getDeployment().getMetadata().getName());
+
+            switch (depEvent.getAction()) {
+               case MODIFIED:
+                  handleModifiedDeployment(depEvent.getDeployment());
+                  break;
+               case DELETED:
+                  handleDeletedDeployment(depEvent.getDeployment());
+                  break;
+            }
+         }
       }
 
       logger.infof("Finishing the reconciliation loop with no update");
@@ -298,8 +323,9 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
    }
 
    /**
-    *
-    * @param deployment
+    * Handle the deletion of a Deployment by recreating it if CR is not marked for deletion.
+    * Updating CR status.
+    * @param deployment The deployment that has been modified.
     */
    public void handleDeletedDeployment(Deployment deployment) {
       // Retrieve owning custom resource.
@@ -326,8 +352,8 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
    }
 
    /**
-    *
-    * @param deployment
+    * Handle the modification of a Deployment and the update of CR Status.
+    * @param deployment The deployment that has been modified
     */
    public void handleModifiedDeployment(Deployment deployment) {
       // Retrieve owning custom resource.
@@ -412,7 +438,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
             .withKind(cr.getKind())
             .withApiVersion(cr.getApiVersion())
             .withName(cr.getMetadata().getName())
-            .withNewUid(cr.getMetadata().getUid())
+            .withUid(cr.getMetadata().getUid())
             .build();
    }
 

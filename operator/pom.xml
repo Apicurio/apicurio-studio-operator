@@ -46,6 +46,9 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${compiler-plugin.version}</version>
+        <configuration>
+          <compilerArgs>-Xlint:deprecation</compilerArgs>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>io.quarkus</groupId>
@@ -66,6 +69,8 @@
       <id>native</id>
       <properties>
         <quarkus.package.type>native</quarkus.package.type>
+        <quarkus.native.additional-build-args>-H:ReflectionConfigurationFiles=reflection-config.json</quarkus.native.additional-build-args>
+        <quarkus.native.resources.includes>k8s/**</quarkus.native.resources.includes>
       </properties>
     </profile>
   </profiles>

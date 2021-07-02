@@ -16,17 +16,25 @@
 package io.apicurio.studio.operator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.sundr.builder.annotations.Buildable;
 
 /**
  * This is the specification of the optional features to activate on ApicurioStudio.
  * @author laurent.broudoux@gmail.com
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Buildable(
+      editableEnabled = false,
+      builderPackage = "io.fabric8.kubernetes.api.builder"
+)
 public class FeaturesSpec {
 
     private boolean asyncAPI = false;
     private boolean graphQL = false;
     private MicrocksSpec microcks = new MicrocksSpec();
+
+    public FeaturesSpec() {
+    }
 
     public boolean isAsyncAPI() {
         return asyncAPI;
