@@ -204,6 +204,8 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
 
          cr.getStatus().setKeycloakModule(new ModuleStatus(ApicurioStudioStatus.State.DEPLOYING));
       } else {
+         logger.infof("Re-using an existing Keycloak instance, setting keycloakUrl to '%s' in status", spec.getKeycloak().getUrl());
+         cr.getStatus().setKeycloakUrl(spec.getKeycloak().getUrl());
          cr.getStatus().setKeycloakModule(new ModuleStatus(ApicurioStudioStatus.State.PREEXISTING));
       }
    }
