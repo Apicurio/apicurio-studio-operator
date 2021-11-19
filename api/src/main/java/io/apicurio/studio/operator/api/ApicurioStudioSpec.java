@@ -31,6 +31,9 @@ public class ApicurioStudioSpec {
 
     private String name;
     private String url;
+    private IngressSpec wsIngress;
+    private IngressSpec apiIngress;
+    private IngressSpec studioIngress;
     private KeycloakSpec keycloak = new KeycloakSpec();
     private DatabaseSpec database = new DatabaseSpec();
     private FeaturesSpec features = new FeaturesSpec();
@@ -52,6 +55,30 @@ public class ApicurioStudioSpec {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public IngressSpec getWsIngress() {
+        return wsIngress;
+    }
+
+    public void setWsIngress(IngressSpec wsIngress) {
+        this.wsIngress = wsIngress;
+    }
+
+    public IngressSpec getApiIngress() {
+        return apiIngress;
+    }
+
+    public void setApiIngress(IngressSpec apiIngress) {
+        this.apiIngress = apiIngress;
+    }
+
+    public IngressSpec getStudioIngress() {
+        return studioIngress;
+    }
+
+    public void setStudioIngress(IngressSpec studioIngress) {
+        this.studioIngress = studioIngress;
     }
 
     public KeycloakSpec getKeycloak() {

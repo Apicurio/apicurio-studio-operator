@@ -25,6 +25,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
 
@@ -39,6 +41,10 @@ public class ApicurioStudioResources {
    public static final String APICURIO_STUDIO_API_MODULE = "apicurio-studio-api";
    public static final String APICURIO_STUDIO_WS_MODULE = "apicurio-studio-ws";
    public static final String APICURIO_STUDIO_UI_MODULE = "apicurio-studio-ui";
+
+   public static final String APICURIO_STUDIO_API_MODULE_DEFAULT_INGRESS_SECRET = APICURIO_STUDIO_API_MODULE + "-ingress-secret";
+   public static final String APICURIO_STUDIO_WS_MODULE_DEFAULT_INGRESS_SECRET = APICURIO_STUDIO_WS_MODULE + "-ingress-secret";
+   public static final String APICURIO_STUDIO_UI_MODULE_DEFAULT_INGRESS_SECRET = APICURIO_STUDIO_UI_MODULE + "-ingress-secret";
 
    /**
     * Get the name of Deployment to create for the API module.
@@ -205,6 +211,59 @@ public class ApicurioStudioResources {
    }
 
    /**
+    * Get the API module Ingress host name from spec.
+    * @param spec The specification from custom resource
+    * @return The host name to use for Kubernetes Ingress
+    */
+   public static String getAPIIngressHost(ApicurioStudioSpec spec) {
+      return APICURIO_STUDIO_API_MODULE + "." + spec.getUrl();
+   }
+
+   /**
+    * Prepare a vanilla Kubernetes Ingress for the API module.
+    * @param spec The specification from custom resource
+    * @return A full Ingress
+    */
+   public static Ingress prepareAPIIngress(ApicurioStudioSpec spec) {
+      // Building a fresh new Ingress according the spec.
+      IngressBuilder builder = new IngressBuilder()
+            .withNewMetadata()
+               .withName(getAPIDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_API_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
+               .addToAnnotations("ingress.kubernetes.io/rewrite-target", "/")
+               .addToAnnotations(IngressSpecUtil.getAnnotationsIfAny(spec.getApiIngress()))
+            .endMetadata()
+            .withNewSpec()
+               .addNewTl()
+                  .addNewHost(getAPIIngressHost(spec))
+                  .withSecretName(IngressSpecUtil.getSecretName(spec.getApiIngress(),
+                        APICURIO_STUDIO_API_MODULE_DEFAULT_INGRESS_SECRET))
+               .endTl()
+               .addNewRule()
+                  .withHost(getAPIIngressHost(spec))
+                  .withNewHttp()
+                     .addNewPath()
+                        .withPath("/")
+                        .withPathType("Prefix")
+                        .withNewBackend()
+                           .withNewService()
+                              .withName(getAPIDeploymentName(spec))
+                              .withNewPort()
+                                 .withNumber(8080)
+                              .endPort()
+                           .endService()
+                        .endBackend()
+                     .endPath()
+                  .endHttp()
+               .endRule()
+            .endSpec();
+
+      return builder.build();
+   }
+
+   /**
     * Get the name of Deployment to create for the WS module.
     * @param spec The specification from custom resource
     * @return The deployment name.
@@ -345,6 +404,59 @@ public class ApicurioStudioResources {
                   .withTermination("edge")
                   .withInsecureEdgeTerminationPolicy("Redirect")
                .endTls()
+            .endSpec();
+
+      return builder.build();
+   }
+
+   /**
+    * Get the WS module Ingress host name from spec.
+    * @param spec The specification from custom resource
+    * @return The host name to use for Kubernetes Ingress
+    */
+   public static String getWSIngressHost(ApicurioStudioSpec spec) {
+      return APICURIO_STUDIO_WS_MODULE + "." + spec.getUrl();
+   }
+
+   /**
+    * Prepare a vanilla Kubernetes Ingress for the WS module.
+    * @param spec The specification from custom resource
+    * @return A full Ingress
+    */
+   public static Ingress prepareWSIngress(ApicurioStudioSpec spec) {
+      // Building a fresh new Ingress according the spec.
+      IngressBuilder builder = new IngressBuilder()
+            .withNewMetadata()
+               .withName(getWSDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_WS_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
+               .addToAnnotations("ingress.kubernetes.io/rewrite-target", "/")
+               .addToAnnotations(IngressSpecUtil.getAnnotationsIfAny(spec.getWsIngress()))
+            .endMetadata()
+            .withNewSpec()
+               .addNewTl()
+                  .addNewHost(getWSIngressHost(spec))
+                  .withSecretName(IngressSpecUtil.getSecretName(spec.getWsIngress(),
+                        APICURIO_STUDIO_WS_MODULE_DEFAULT_INGRESS_SECRET))
+               .endTl()
+               .addNewRule()
+                  .withHost(getWSIngressHost(spec))
+                  .withNewHttp()
+                     .addNewPath()
+                        .withPath("/")
+                        .withPathType("Prefix")
+                        .withNewBackend()
+                           .withNewService()
+                              .withName(getWSDeploymentName(spec))
+                              .withNewPort()
+                                 .withNumber(8080)
+                              .endPort()
+                           .endService()
+                        .endBackend()
+                     .endPath()
+                  .endHttp()
+               .endRule()
             .endSpec();
 
       return builder.build();
@@ -513,6 +625,59 @@ public class ApicurioStudioResources {
                   .withTermination("edge")
                   .withInsecureEdgeTerminationPolicy("Redirect")
                .endTls()
+            .endSpec();
+
+      return builder.build();
+   }
+
+   /**
+    * Get the UI module Ingress host name from spec.
+    * @param spec The specification from custom resource
+    * @return The host name to use for Kubernetes Ingress
+    */
+   public static String getUIIngressHost(ApicurioStudioSpec spec) {
+      return APICURIO_STUDIO_UI_MODULE + "." + spec.getUrl();
+   }
+
+   /**
+    * Prepare a vanilla Kubernetes Ingress for the UI module.
+    * @param spec The specification from custom resource
+    * @return A full Ingress
+    */
+   public static Ingress prepareUIIngress(ApicurioStudioSpec spec) {
+      // Building a fresh new Ingress according the spec.
+      IngressBuilder builder = new IngressBuilder()
+            .withNewMetadata()
+               .withName(getUIDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_UI_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
+               .addToAnnotations("ingress.kubernetes.io/rewrite-target", "/")
+               .addToAnnotations(IngressSpecUtil.getAnnotationsIfAny(spec.getStudioIngress()))
+            .endMetadata()
+            .withNewSpec()
+               .addNewTl()
+                  .addNewHost(getUIIngressHost(spec))
+                  .withSecretName(IngressSpecUtil.getSecretName(spec.getStudioIngress(),
+                        APICURIO_STUDIO_UI_MODULE_DEFAULT_INGRESS_SECRET))
+               .endTl()
+               .addNewRule()
+                  .withHost(getUIIngressHost(spec))
+                  .withNewHttp()
+                     .addNewPath()
+                        .withPath("/")
+                        .withPathType("Prefix")
+                        .withNewBackend()
+                           .withNewService()
+                              .withName(getUIDeploymentName(spec))
+                              .withNewPort()
+                                 .withNumber(8080)
+                              .endPort()
+                           .endService()
+                        .endBackend()
+                     .endPath()
+                  .endHttp()
+               .endRule()
             .endSpec();
 
       return builder.build();

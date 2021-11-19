@@ -15,6 +15,7 @@
  */
 package io.apicurio.studio.operator.resource;
 
+import io.apicurio.studio.operator.Constants;
 import io.apicurio.studio.operator.api.ApicurioStudioSpec;
 import io.apicurio.studio.operator.api.ApicurioStudioStatus;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -28,6 +29,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
@@ -44,6 +47,9 @@ public class KeycloakResources {
 
    /** The name of the Keycloak module. */
    public static final String APICURIO_STUDIO_AUTH_MODULE = "apicurio-studio-auth";
+
+   /** The default Ingress secret name for Keycloak module. */
+   public static final String APICURIO_STUDIO_AUTH_MODULE_DEFAULT_INGRESS_SECRET = APICURIO_STUDIO_AUTH_MODULE + "-ingress-secret";
 
    /**
     * Get the Keycloak credentials secret name.
@@ -219,6 +225,7 @@ public class KeycloakResources {
                .withName(getKeycloakDeploymentName(spec))
                .addToLabels("app", spec.getName())
                .addToLabels("module", APICURIO_STUDIO_AUTH_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
             .endMetadata()
             .withNewSpec()
                .withNewTo()
@@ -236,4 +243,50 @@ public class KeycloakResources {
 
       return builder.build();
    }
+
+   /**
+    * Prepare a vanilla Kubernetes Ingress for Keycloak module.
+    * @param spec The studio custom resource.
+    * @return A full Ingress
+    */
+   public static Ingress prepareKeycloakIngress(ApicurioStudioSpec spec) {
+      // Building a fresh new Ingress according the spec.
+      IngressBuilder builder = new IngressBuilder()
+            .withNewMetadata()
+               .withName(getKeycloakDeploymentName(spec))
+               .addToLabels("app", spec.getName())
+               .addToLabels("module", APICURIO_STUDIO_AUTH_MODULE)
+               .addToLabels(Constants.MANAGED_BY_LABEL, Constants.OPERATOR_ID)
+               .addToAnnotations("ingress.kubernetes.io/rewrite-target", "/")
+               .addToAnnotations(IngressSpecUtil.getAnnotationsIfAny(spec.getKeycloak().getIngress()))
+            .endMetadata()
+            .withNewSpec()
+               .addNewTl()
+                  .addNewHost(spec.getKeycloak().getUrl())
+                  .withSecretName(IngressSpecUtil.getSecretName(spec.getKeycloak().getIngress(),
+                        APICURIO_STUDIO_AUTH_MODULE_DEFAULT_INGRESS_SECRET))
+               .endTl()
+               .addNewRule()
+                  .withHost(spec.getKeycloak().getUrl())
+                  .withNewHttp()
+                     .addNewPath()
+                        .withPath("/")
+                        .withPathType("Prefix")
+                        .withNewBackend()
+                           .withNewService()
+                              .withName(getKeycloakDeploymentName(spec))
+                              .withNewPort()
+                                 .withNumber(8080)
+                              .endPort()
+                           .endService()
+                        .endBackend()
+                     .endPath()
+                  .endHttp()
+               .endRule()
+            .endSpec();
+
+      return builder.build();
+   }
+
+
 }

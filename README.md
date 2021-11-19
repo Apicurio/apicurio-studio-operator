@@ -80,7 +80,7 @@ spec:
 
 ### Complete CRD
 
-Here's now a complete `MicrocksInstall` CRD that I use - for example - on Minikube for testing vanilla Kubernetes support. This one adds the `url` attributes that are mandatory on vanilla Kubernetes.
+Here's now a complete `ApicurioStudio` CRD that I use - for example - on OpenShift.
 
 ```yaml
 apiVersion: studio.apicur.io/v1alpha1
@@ -107,6 +107,27 @@ spec:
       clientId: microcks-serviceaccount
       clientSecret: ab54d329-e435-41ae-a900-ec6b3fe15c54
 ```
+
+For a deployment on Vanilla Kubernetes, you'll need to specify `url` attributes for both root and `keycloak` elements:
+
+```shell
+apiVersion: studio.apicur.io/v1alpha1
+kind: ApicurioStudio
+metadata:
+  name: apicurio-sample
+spec:
+  name: apicurio-sample
+  url: apicurio.192.168.64.11.nip.io
+  keycloak:
+    url: keycloak.apicurio.192.168.64.11.nip.io
+```
+
+The `spec.url` will be used as a suffix to generate `Ingresses` address for raw Apicurio components and you'll end up with:
+*  `apicurio-sample-ui.apicurio.192.168.64.11.nip.io` ingress for the frontend,
+*  `apicurio-sample-ws.apicurio.192.168.64.11.nip.io` ingress for the WS server,
+*  `apicurio-sample-api.apicurio.192.168.64.11.nip.io` ingress for the API server.
+
+The `spec.keycloak.url` will be sued as is to expose an ingress for accessing Keycloak.
 
 ### ApicurioStudio details
 

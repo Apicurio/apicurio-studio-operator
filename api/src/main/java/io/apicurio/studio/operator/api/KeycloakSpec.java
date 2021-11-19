@@ -35,6 +35,7 @@ public class KeycloakSpec {
     private String volumeSize = "500Mi";
     private String user;
     private String password;
+    private IngressSpec ingress;
 
     public KeycloakSpec() {
     }
@@ -85,5 +86,13 @@ public class KeycloakSpec {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public IngressSpec getIngress() {
+        return ingress;
+    }
+
+    public void setIngress(IngressSpec ingress) {
+        this.ingress = ingress;
     }
 }
