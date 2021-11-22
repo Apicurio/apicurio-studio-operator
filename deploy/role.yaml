@@ -37,6 +37,12 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - '*'
+  - apiGroups:
       - route.openshift.io
     resources:
       - routes/custom-host

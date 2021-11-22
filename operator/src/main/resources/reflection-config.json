@@ -1,5 +1,8 @@
 [
   {
+    "name" : "io.apicurio.studio.operator.api.IngressSpec", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
+  },
+  {
     "name" : "io.apicurio.studio.operator.api.KeycloakSpec", "allDeclaredConstructors" : true, "allPublicConstructors" : true, "allDeclaredMethods" : true, "allPublicMethods" : true, "allDeclaredFields" : true, "allPublicFields" : true
   },
   {

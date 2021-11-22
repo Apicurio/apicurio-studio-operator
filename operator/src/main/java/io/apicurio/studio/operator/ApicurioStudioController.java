@@ -17,8 +17,13 @@ package io.apicurio.studio.operator;
 
 import javax.inject.Inject;
 
+import io.apicurio.studio.operator.api.ApicurioStudio;
+import io.apicurio.studio.operator.api.ApicurioStudioSpec;
+import io.apicurio.studio.operator.api.ApicurioStudioStatus;
+import io.apicurio.studio.operator.api.IngressSpec;
 import io.apicurio.studio.operator.api.ModuleStatus;
 import io.apicurio.studio.operator.resource.DatabaseResources;
+import io.apicurio.studio.operator.resource.IngressSpecUtil;
 import io.apicurio.studio.operator.resource.KeycloakResources;
 import io.apicurio.studio.operator.watcher.DeploymentEvent;
 import io.apicurio.studio.operator.watcher.DeploymentEventSource;
@@ -27,6 +32,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
 import io.fabric8.kubernetes.client.Watcher.Action;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -35,9 +41,6 @@ import io.javaoperatorsdk.operator.processing.event.internal.CustomResourceEvent
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.jboss.logging.Logger;
 
-import io.apicurio.studio.operator.api.ApicurioStudio;
-import io.apicurio.studio.operator.api.ApicurioStudioSpec;
-import io.apicurio.studio.operator.api.ApicurioStudioStatus;
 import io.apicurio.studio.operator.resource.ApicurioStudioResources;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -49,6 +52,7 @@ import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -103,14 +107,27 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
          // First thing is to retrieve the UI module Host that is needed by Keycloak.
          if (isOpenShift) {
             // Create an OpenShift Route...
-            logger.infof("Creating a new Route for apicurio-studio-ui, name '%s'", ApicurioStudioResources.getUIDeploymentName(spec));
+            logger.infof("Creating a new Route for apicurio-studio-ui, named '%s'", ApicurioStudioResources.getUIDeploymentName(spec));
             Route uiRoute = ApicurioStudioResources.prepareUIRoute(spec);
             uiRoute.getMetadata().setOwnerReferences(refs);
             uiRoute = client.adapt(OpenShiftClient.class).routes().inNamespace(ns).createOrReplace(uiRoute);
 
             apicurioStudio.getStatus().setStudioUrl(uiRoute.getSpec().getHost());
          } else {
+            // Create a Secret for Ingress certs if needed.
+            createIngressSecretIfNeeded(apicurioStudio, spec.getStudioIngress(),
+                  ApicurioStudioResources.APICURIO_STUDIO_UI_MODULE_DEFAULT_INGRESS_SECRET,
+                  ApicurioStudioResources.APICURIO_STUDIO_UI_MODULE,
+                  ApicurioStudioResources.getUIIngressHost(spec));
+
             // Create a vanilla Kubernetes Ingress...
+            logger.infof("Creating a new Ingress for apicurio-studio-ui, named '%s'", ApicurioStudioResources.getUIDeploymentName(spec));
+            Ingress uiIngress = ApicurioStudioResources.prepareUIIngress(spec);
+            uiIngress.getMetadata().setOwnerReferences(refs);
+            uiIngress = client.network().v1().ingresses().inNamespace(ns).createOrReplace(uiIngress);
+
+            logger.infof("Updating studioUrl in status with '%s'", uiIngress.getSpec().getRules().get(0).getHost());
+            apicurioStudio.getStatus().setStudioUrl(uiIngress.getSpec().getRules().get(0).getHost());
          }
 
          try {
@@ -158,6 +175,31 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
    }
 
    /**
+    * Manage creation of Ingress Secret if required.
+    * @param cr The studio custom resource.
+    * @param spec The IngressSpec that may be null
+    * @param secretName The name of secret to generate if any
+    * @param module The name of the module of this secret
+    * @param host The host for certificate in the secret
+    */
+   public void createIngressSecretIfNeeded(ApicurioStudio cr, IngressSpec spec, String secretName, String module, String host) {
+      if (IngressSpecUtil.generateCertificateSecret(spec)) {
+         final String ns = cr.getMetadata().getNamespace();
+         final List<OwnerReference> refs = List.of(getOwnerReference(cr));
+
+         Map<String, String> labels = Map.of("app", cr.getSpec().getName(), "module", module);
+
+         Secret secret = client.secrets().inNamespace(ns).withName(secretName).get();
+         if (secret == null) {
+            logger.infof("Creating a new Ingress Secret for %s, named '%s'", module, secretName);
+            Secret certSecret = IngressSpecUtil.generateSelfSignedCertificateSecret(secretName, labels, host);
+            certSecret.getMetadata().setOwnerReferences(refs);
+            client.secrets().inNamespace(ns).create(certSecret);
+         }
+      }
+   }
+
+   /**
     * Manage Keycloak related resources.
     * @param cr The studio custom resource.
     */
@@ -187,14 +229,22 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
 
          if (isOpenShift) {
             // Create an OpenShift Route...
-            logger.infof("Creating a new Route for apicurio-studio-auth, name '%s'", KeycloakResources.getKeycloakDeploymentName(spec));
+            logger.infof("Creating a new Route for apicurio-studio-auth, named '%s'", KeycloakResources.getKeycloakDeploymentName(spec));
             Route authRoute = KeycloakResources.prepareKeycloakRoute(spec);
             authRoute.getMetadata().setOwnerReferences(refs);
             authRoute = client.adapt(OpenShiftClient.class).routes().inNamespace(ns).createOrReplace(authRoute);
 
+            logger.infof("Updating keycloakUrl in status with '%s'", authRoute.getSpec().getHost());
             cr.getStatus().setKeycloakUrl(authRoute.getSpec().getHost());
          } else {
             // Create a vanilla Kubernetes Ingress...
+            logger.infof("Creating a new Ingress for apicurio-studio-auth, named '%s'", KeycloakResources.getKeycloakDeploymentName(spec));
+            Ingress authIngress = KeycloakResources.prepareKeycloakIngress(spec);
+            authIngress.getMetadata().setOwnerReferences(refs);
+            authIngress = client.network().v1().ingresses().inNamespace(ns).createOrReplace(authIngress);
+
+            logger.infof("Updating keycloakUrl in status with '%s'", authIngress.getSpec().getRules().get(0).getHost());
+            cr.getStatus().setKeycloakUrl(authIngress.getSpec().getRules().get(0).getHost());
          }
 
          logger.infof("Creating a new Deployment for apicurio-studio-auth, named '%s'", KeycloakResources.getKeycloakDeploymentName(spec));
@@ -266,7 +316,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
 
       if (isOpenShift) {
          // Create an OpenShift Route...
-         logger.infof("Creating a new Route for apicurio-studio-api, name '%s'", ApicurioStudioResources.getAPIDeploymentName(spec));
+         logger.infof("Creating a new Route for apicurio-studio-api, named '%s'", ApicurioStudioResources.getAPIDeploymentName(spec));
          Route apiRoute = ApicurioStudioResources.prepareAPIRoute(spec);
          apiRoute.getMetadata().setOwnerReferences(refs);
          apiRoute = client.adapt(OpenShiftClient.class).routes().inNamespace(ns).createOrReplace(apiRoute);
@@ -274,7 +324,20 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
          logger.infof("Updating apiUrl in status with '%s'", apiRoute.getSpec().getHost());
          cr.getStatus().setApiUrl(apiRoute.getSpec().getHost());
       } else {
+         // Create a Secret for Ingress certs if needed.
+         createIngressSecretIfNeeded(cr, spec.getApiIngress(),
+               ApicurioStudioResources.APICURIO_STUDIO_API_MODULE_DEFAULT_INGRESS_SECRET,
+               ApicurioStudioResources.APICURIO_STUDIO_API_MODULE,
+               ApicurioStudioResources.getAPIIngressHost(spec));
+
          // Create a vanilla Kubernetes Ingress...
+         logger.infof("Creating a new Ingress for apicurio-studio-api, named '%s'", ApicurioStudioResources.getAPIDeploymentName(spec));
+         Ingress apiIngress = ApicurioStudioResources.prepareAPIIngress(spec);
+         apiIngress.getMetadata().setOwnerReferences(refs);
+         apiIngress = client.network().v1().ingresses().inNamespace(ns).createOrReplace(apiIngress);
+
+         logger.infof("Updating apiUrl in status with '%s'", apiIngress.getSpec().getRules().get(0).getHost());
+         cr.getStatus().setApiUrl(apiIngress.getSpec().getRules().get(0).getHost());
       }
 
       logger.infof("Creating a new Deployment for apicurio-studio-api, named '%s'", ApicurioStudioResources.getAPIDeploymentName(spec));
@@ -292,7 +355,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
 
       if (isOpenShift) {
          // Create an OpenShift Route...
-         logger.infof("Creating a new Route for apicurio-studio-ws, name '%s'", ApicurioStudioResources.getWSDeploymentName(spec));
+         logger.infof("Creating a new Route for apicurio-studio-ws, named '%s'", ApicurioStudioResources.getWSDeploymentName(spec));
          Route wsRoute = ApicurioStudioResources.prepareWSRoute(spec);
          wsRoute.getMetadata().setOwnerReferences(refs);
          wsRoute = client.adapt(OpenShiftClient.class).routes().inNamespace(ns).createOrReplace(wsRoute);
@@ -300,7 +363,20 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
          logger.infof("Updating wsUrl in status with '%s'", wsRoute.getSpec().getHost());
          cr.getStatus().setWsUrl(wsRoute.getSpec().getHost());
       } else {
+         // Create a Secret for Ingress certs if needed.
+         createIngressSecretIfNeeded(cr, spec.getWsIngress(),
+               ApicurioStudioResources.APICURIO_STUDIO_WS_MODULE_DEFAULT_INGRESS_SECRET,
+               ApicurioStudioResources.APICURIO_STUDIO_WS_MODULE,
+               ApicurioStudioResources.getWSIngressHost(spec));
+
          // Create a vanilla Kubernetes Ingress...
+         logger.infof("Creating a new Ingress for apicurio-studio-ws, named '%s'", ApicurioStudioResources.getWSDeploymentName(spec));
+         Ingress wsIngress = ApicurioStudioResources.prepareWSIngress(spec);
+         wsIngress.getMetadata().setOwnerReferences(refs);
+         wsIngress = client.network().v1().ingresses().inNamespace(ns).createOrReplace(wsIngress);
+
+         logger.infof("Updating wsUrl in status with '%s'", wsIngress.getSpec().getRules().get(0).getHost());
+         cr.getStatus().setWsUrl(wsIngress.getSpec().getRules().get(0).getHost());
       }
 
       logger.infof("Creating a new Deployment for apicurio-studio-ws, named '%s'", ApicurioStudioResources.getWSDeploymentName(spec));

@@ -1,0 +1,9 @@
+apiVersion: studio.apicur.io/v1alpha1
+kind: ApicurioStudio
+metadata:
+  name: apicurio-sample
+spec:
+  name: apicurio-sample
+  url: apicurio.192.168.64.11.nip.io
+  keycloak:
+    url: keycloak.apicurio.192.168.64.11.nip.io

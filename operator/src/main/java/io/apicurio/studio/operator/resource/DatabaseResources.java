@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -204,6 +205,21 @@ public class DatabaseResources {
                      .endTemplate()
                   .endSpec()
                   .build();
+            if (!client.isAdaptable(OpenShiftClient.class)) {
+               deployment = new DeploymentBuilder(deployment)
+                     .editSpec()
+                        .editTemplate()
+                           .editSpec()
+                              .editSecurityContext()
+                                 .withRunAsUser(26L)
+                                 .withRunAsGroup(26L)
+                                 .withFsGroup(26L)
+                              .endSecurityContext()
+                           .endSpec()
+                        .endTemplate()
+                     .endSpec()
+                     .build();
+            }
       }
       // Complete with generic labels and selectors.
       deployment = new DeploymentBuilder(deployment)
