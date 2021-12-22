@@ -33,16 +33,16 @@ $ kubectl create namespace apicurio
 Then, from this repository root directory, create the specific CRDS and resources needed for Operator:
 
 ```sh
-$ kubectl create -f deploy/crd/apicuriostudios.studio.apicur.io-v1.yml
-$ kubectl create -f deploy/service_account.yaml -n apicurio 
-$ kubectl create -f deploy/role.yaml -n apicurio
-$ kubectl create -f deploy/role_binding.yaml -n apicurio
+kubectl create -f deploy/crd/apicuriostudios.studio.apicur.io-v1.yml
+kubectl create -f deploy/service_account.yaml -n apicurio 
+kubectl create -f deploy/role.yaml -n apicurio
+kubectl create -f deploy/role_binding.yaml -n apicurio
 ```
 
 Finally, deploy the operator:
 
 ```sh
-$ kubectl create -f deploy/operator.yaml -n apicurio
+kubectl create -f deploy/operator.yaml -n apicurio
 ```
 
 Wait a minute or two and check everything is running:
@@ -216,3 +216,5 @@ Produce a native container image with the name elements specified within the `po
 ```sh
 mvn package -Pnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true
 ```
+
+> NOTE: To build a native image you must have GraalVM installed. See [here](https://quarkus.io/guides/building-native-image#graalvm) for instructions on how to set it up.
