@@ -11,7 +11,7 @@ Kubernetes Operator for easy setup and management of Apicurio Studio instances.
 * [Usage](#usage)
     * [Minimalist CRD](#minimalist-crd)
     * [Complete CRD](#complete-crd)
-    * [ApicurioStudio details](#apicuriostudio-details)
+    * [Apicurio Studio details](#apicuriostudio-details)
     * [Status tracking](#status-tracking)
 * [Build](#build)
 <!--te-->
@@ -48,7 +48,7 @@ $ kubectl create -f deploy/operator.yaml -n apicurio
 Wait a minute or two and check everything is running:
 
 ```sh
-$ kubectl get pods -n microcks                                  
+$ kubectl get pods -n apicurio                                  
 NAME                                        READY     STATUS    RESTARTS   AGE
 apicurio-studio-operator-76d47d899f-2tzzm   1/1       Running   0          1m
 ```
@@ -57,11 +57,13 @@ Now just create a `ApicurioStudio` CRD!
 
 ### Via OLM add-on
 
-[Operator Lyfecycle Manager](https://github.com/operator-framework/operator-lifecycle-manager) shoud be installed on your cluster first. Please follow this [guideline](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/Documentation/install/install.md) to know how to proceed.
+[Operator Lifecycle Manager](https://github.com/operator-framework/operator-lifecycle-manager) should be installed on your cluster first. Please follow this [guideline](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/Documentation/install/install.md) to know how to proceed.
 
 You can then use the [OperatorHub.io](https://operatorhub.io) catalog of Kubernetes Operators sourced from multiple providers. It offers you an alternative way to install stable versions of Microcks using the Microcks Operator. To install Microcks from [OperatorHub.io](https://operatorhub.io), locate the *Apicurio Studio Operator* and follow the instructions provided.
 
 As an alternative, raw resources can also be found into the `/deploy/olm` directory of this repo.
+
+## Usage
 
 ### Minimalist CRD
 
