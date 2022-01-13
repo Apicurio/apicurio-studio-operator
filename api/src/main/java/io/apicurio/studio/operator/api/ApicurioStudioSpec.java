@@ -31,14 +31,19 @@ public class ApicurioStudioSpec {
 
     private String name;
     private String url;
-    private IngressSpec wsIngress;
-    private IngressSpec apiIngress;
-    private IngressSpec studioIngress;
+
+    private ModuleSpec wsModule;
+    private ModuleSpec apiModule;
+    private ModuleSpec studioModule;
+
     private KeycloakSpec keycloak = new KeycloakSpec();
     private DatabaseSpec database = new DatabaseSpec();
     private FeaturesSpec features = new FeaturesSpec();
 
     public ApicurioStudioSpec() {
+        wsModule = new ModuleSpec("apicurio/apicurio-studio-ws:latest");
+        apiModule = new ModuleSpec("apicurio/apicurio-studio-api:latest");
+        studioModule = new ModuleSpec("apicurio/apicurio-studio-ui:latest");
     }
 
     public String getName() {
@@ -57,28 +62,28 @@ public class ApicurioStudioSpec {
         this.url = url;
     }
 
-    public IngressSpec getWsIngress() {
-        return wsIngress;
+    public ModuleSpec getWsModule() {
+        return wsModule;
     }
 
-    public void setWsIngress(IngressSpec wsIngress) {
-        this.wsIngress = wsIngress;
+    public void setWsModule(ModuleSpec wsModule) {
+        this.wsModule = wsModule;
     }
 
-    public IngressSpec getApiIngress() {
-        return apiIngress;
+    public ModuleSpec getApiModule() {
+        return apiModule;
     }
 
-    public void setApiIngress(IngressSpec apiIngress) {
-        this.apiIngress = apiIngress;
+    public void setApiModule(ModuleSpec apiModule) {
+        this.apiModule = apiModule;
     }
 
-    public IngressSpec getStudioIngress() {
-        return studioIngress;
+    public ModuleSpec getStudioModule() {
+        return studioModule;
     }
 
-    public void setStudioIngress(IngressSpec studioIngress) {
-        this.studioIngress = studioIngress;
+    public void setStudioModule(ModuleSpec studioModule) {
+        this.studioModule = studioModule;
     }
 
     public KeycloakSpec getKeycloak() {
