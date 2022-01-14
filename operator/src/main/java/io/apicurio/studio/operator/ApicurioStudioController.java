@@ -115,7 +115,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
             apicurioStudio.getStatus().setStudioUrl(uiRoute.getSpec().getHost());
          } else {
             // Create a Secret for Ingress certs if needed.
-            createIngressSecretIfNeeded(apicurioStudio, spec.getStudioIngress(),
+            createIngressSecretIfNeeded(apicurioStudio, spec.getStudioModule().getIngress(),
                   ApicurioStudioResources.APICURIO_STUDIO_UI_MODULE_DEFAULT_INGRESS_SECRET,
                   ApicurioStudioResources.APICURIO_STUDIO_UI_MODULE,
                   ApicurioStudioResources.getUIIngressHost(spec));
@@ -325,7 +325,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
          cr.getStatus().setApiUrl(apiRoute.getSpec().getHost());
       } else {
          // Create a Secret for Ingress certs if needed.
-         createIngressSecretIfNeeded(cr, spec.getApiIngress(),
+         createIngressSecretIfNeeded(cr, spec.getApiModule().getIngress(),
                ApicurioStudioResources.APICURIO_STUDIO_API_MODULE_DEFAULT_INGRESS_SECRET,
                ApicurioStudioResources.APICURIO_STUDIO_API_MODULE,
                ApicurioStudioResources.getAPIIngressHost(spec));
@@ -364,7 +364,7 @@ public class ApicurioStudioController implements ResourceController<ApicurioStud
          cr.getStatus().setWsUrl(wsRoute.getSpec().getHost());
       } else {
          // Create a Secret for Ingress certs if needed.
-         createIngressSecretIfNeeded(cr, spec.getWsIngress(),
+         createIngressSecretIfNeeded(cr, spec.getWsModule().getIngress(),
                ApicurioStudioResources.APICURIO_STUDIO_WS_MODULE_DEFAULT_INGRESS_SECRET,
                ApicurioStudioResources.APICURIO_STUDIO_WS_MODULE,
                ApicurioStudioResources.getWSIngressHost(spec));

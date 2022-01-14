@@ -56,15 +56,35 @@ spec:
                     database:
                       type: string
                   type: object
-                studioIngress:
+                apiModule:
                   properties:
-                    secretRef:
+                    ingress:
+                      properties:
+                        secretRef:
+                          type: string
+                        generateCert:
+                          type: boolean
+                        annotations:
+                          additionalProperties:
+                            type: string
+                          type: object
+                      type: object
+                    image:
                       type: string
-                    generateCert:
-                      type: boolean
-                    annotations:
-                      additionalProperties:
-                        type: string
+                    resources:
+                      properties:
+                        limits:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        requests:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        additionalProperties:
+                          additionalProperties:
+                            type: string
+                          type: object
                       type: object
                   type: object
                 keycloak:
@@ -97,26 +117,66 @@ spec:
                   type: string
                 name:
                   type: string
-                apiIngress:
+                wsModule:
                   properties:
-                    secretRef:
+                    ingress:
+                      properties:
+                        secretRef:
+                          type: string
+                        generateCert:
+                          type: boolean
+                        annotations:
+                          additionalProperties:
+                            type: string
+                          type: object
+                      type: object
+                    image:
                       type: string
-                    generateCert:
-                      type: boolean
-                    annotations:
-                      additionalProperties:
-                        type: string
+                    resources:
+                      properties:
+                        limits:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        requests:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        additionalProperties:
+                          additionalProperties:
+                            type: string
+                          type: object
                       type: object
                   type: object
-                wsIngress:
+                studioModule:
                   properties:
-                    secretRef:
+                    ingress:
+                      properties:
+                        secretRef:
+                          type: string
+                        generateCert:
+                          type: boolean
+                        annotations:
+                          additionalProperties:
+                            type: string
+                          type: object
+                      type: object
+                    image:
                       type: string
-                    generateCert:
-                      type: boolean
-                    annotations:
-                      additionalProperties:
-                        type: string
+                    resources:
+                      properties:
+                        limits:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        requests:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        additionalProperties:
+                          additionalProperties:
+                            type: string
+                          type: object
                       type: object
                   type: object
               type: object
