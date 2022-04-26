@@ -16,7 +16,11 @@
 package io.apicurio.studio.operator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.sundr.builder.annotations.Buildable;
+
+import java.util.Map;
 
 /**
  * This is the specification of the ApicurioStudio API.
@@ -42,8 +46,41 @@ public class ApicurioStudioSpec {
 
     public ApicurioStudioSpec() {
         wsModule = new ModuleSpec("apicurio/apicurio-studio-ws:latest");
+        wsModule.setResources(new ResourceRequirements(
+              Map.of(
+                    "cpu", new Quantity("1"),
+                    "memory", new Quantity("1800Mi")
+              ), // Default limits.
+              Map.of(
+                    "cpu", new Quantity("100m"),
+                    "memory", new Quantity("900Mi")
+              ) // Default requests.
+            )
+        );
         apiModule = new ModuleSpec("apicurio/apicurio-studio-api:latest");
+        apiModule.setResources(new ResourceRequirements(
+              Map.of(
+                    "cpu", new Quantity("1"),
+                    "memory", new Quantity("1700Mi")
+              ), // Default limits.
+              Map.of(
+                  "cpu", new Quantity("100m"),
+                  "memory", new Quantity("800Mi")
+              ) // Default requests.
+            )
+        );
         studioModule = new ModuleSpec("apicurio/apicurio-studio-ui:latest");
+        studioModule.setResources(new ResourceRequirements(
+              Map.of(
+                    "cpu", new Quantity("1"),
+                    "memory", new Quantity("1300Mi")
+              ), // Default limits.
+              Map.of(
+                    "cpu", new Quantity("100m"),
+                    "memory", new Quantity("600Mi")
+              ) // Default requests.
+            )
+        );
     }
 
     public String getName() {

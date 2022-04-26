@@ -91,6 +91,23 @@ metadata:
   name: apicurio-sample
 spec:
   name: apicurio-sample
+  apiModule:
+    image: apicurio/apicurio-studio-api:latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 800Mi
+      limits:
+        cpu: 1
+        memory: 1500Mi
+    ingress:
+      generateCert: false
+      secretRef: apicurio-studio-api-ingress-secret
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        kubernetes.io/ingress.class: nginx
+  wsModule: {}
+  studioModule: {}
   keycloak:
     install: true
     realm: apicurio
